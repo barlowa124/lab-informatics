@@ -115,6 +115,26 @@ Rscript RNAseq_Pipelines/run_metaflux_optimized.R
 python RNAseq_Pipelines/compare_ryan_salmon.py
 ```
 
+## LIMS layer
+
+[`lims/registry.py`](lims/registry.py) is a minimal lab-information layer
+(SQLite, stdlib-only) for the records side the pipelines do not cover:
+sample registration, experiment status transitions, plate-well assignment,
+and result tracking by content hash. The differentiating piece is the
+audit log: every mutation appends a row whose SHA-256 covers the row
+content plus the previous audit hash, so editing or deleting history rows
+breaks `verify_audit_chain()` (tested, including a mid-chain deletion).
+Experiment status is a forward-only state machine
+(`registered → queued → assigned → processed → analyzed → locked`);
+locked experiments refuse further mutation.
+
+[`lims/demo_lims.py`](lims/demo_lims.py) registers a synthetic 16-sample
+RNA-seq batch end to end and writes the committed artifacts:
+[`results/lims_summary.json`](results/lims_summary.json) and the full
+audit trail in [`results/lims_audit_log.csv`](results/lims_audit_log.csv).
+This is a schema-and-integrity layer, not Benchling: no UI, no ELN
+narrative editor, no instrument integration.
+
 ## Limitations
 
 - Tuned for one lab's hardware (tmpfs/RAM-disk staging, high thread counts).

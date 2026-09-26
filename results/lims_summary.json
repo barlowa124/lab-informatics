@@ -1,0 +1,13 @@
+{
+  "experiment": "EXP-RNA-0042",
+  "status": "locked",
+  "n_samples": 16,
+  "plate_wells_assigned": 16,
+  "results_attached": 1,
+  "mutation_after_lock_refused": true,
+  "audit_chain": {
+    "ok": true,
+    "rows": 39
+  },
+  "audit_rows": 39
+}
