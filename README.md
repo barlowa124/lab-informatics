@@ -94,3 +94,7 @@ parts that carry over to real hardware - wire protocols, timeouts, reconnects, e
 registers, typed capture, alarms, provenance - and not the parts that do not, like
 electrical noise, connector quirks, or vendor SDK licensing. The emulator's process
 model is a first-order approximation, not a validated bioreactor model.
+
+## Related work
+
+- [dockops](https://github.com/barlowa124/dockops) applies the same provenance-manifest discipline to docking pipelines instead of instrument captures.
