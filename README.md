@@ -98,3 +98,4 @@ model is a first-order approximation, not a validated bioreactor model.
 ## Related work
 
 - [dockops](https://github.com/barlowa124/dockops) applies the same provenance-manifest discipline to docking pipelines instead of instrument captures.
+- [bioprocess-decision-runtime](https://github.com/barlowa124/bioprocess-decision-runtime) consumes this repo's captures: `python -m bioprocess_runtime capture-scenario capture.sqlite` evaluates the newest readings window through its advisory-only policy.
