@@ -1,0 +1,173 @@
+{
+  "mapping_version": "scientific-csv-v1",
+  "run_id": "8860ae33eac0497bf6159a62939b118f867ce7a014514d49d1f3fa788fb1161b",
+  "source_sha256": {
+    "samples.csv": "58e8349612a306fbdf23c1ac50711364c1869787506faf1bc4a5699c4f6cf90f",
+    "assays.csv": "111c4ca59f2ce885847d0e97e5b4f3cfeaef709c04a74e849287b73735d1cce8"
+  },
+  "dry_run": false,
+  "replayed": false,
+  "committed": true,
+  "reconciliation": {
+    "samples": {
+      "input": 4,
+      "accepted": 1,
+      "rejected": 3
+    },
+    "assays": {
+      "input": 4,
+      "accepted": 1,
+      "rejected": 3
+    }
+  },
+  "records": {
+    "samples": [
+      {
+        "record": 1,
+        "raw": {
+          "sample_id": " s-1 ",
+          "kind": "rna"
+        },
+        "normalized": {
+          "sample_id": "S-1",
+          "kind": "rna"
+        },
+        "errors": [],
+        "accepted": true
+      },
+      {
+        "record": 2,
+        "raw": {
+          "sample_id": "S-2",
+          "kind": "protein"
+        },
+        "normalized": {
+          "sample_id": "S-2",
+          "kind": "protein"
+        },
+        "errors": [
+          "ambiguous_sample_id"
+        ],
+        "accepted": false
+      },
+      {
+        "record": 3,
+        "raw": {
+          "sample_id": " s-2 ",
+          "kind": "protein"
+        },
+        "normalized": {
+          "sample_id": "S-2",
+          "kind": "protein"
+        },
+        "errors": [
+          "ambiguous_sample_id"
+        ],
+        "accepted": false
+      },
+      {
+        "record": 4,
+        "raw": {
+          "sample_id": "S-3",
+          "kind": ""
+        },
+        "normalized": {
+          "sample_id": "S-3",
+          "kind": ""
+        },
+        "errors": [
+          "missing_kind"
+        ],
+        "accepted": false
+      }
+    ],
+    "assays": [
+      {
+        "record": 1,
+        "raw": {
+          "assay_id": "a-1",
+          "sample_id": "s-1",
+          "assay": "protein",
+          "value": "2.5",
+          "unit": "g/L"
+        },
+        "normalized": {
+          "assay_id": "A-1",
+          "sample_id": "S-1",
+          "assay": "protein",
+          "value": 2.5,
+          "unit": "g/L"
+        },
+        "errors": [],
+        "accepted": true
+      },
+      {
+        "record": 2,
+        "raw": {
+          "assay_id": "a-2",
+          "sample_id": "S-2",
+          "assay": "protein",
+          "value": "1",
+          "unit": "g/L"
+        },
+        "normalized": {
+          "assay_id": "A-2",
+          "sample_id": "S-2",
+          "assay": "protein",
+          "value": 1.0,
+          "unit": "g/L"
+        },
+        "errors": [
+          "sample_not_accepted_in_this_import"
+        ],
+        "accepted": false
+      },
+      {
+        "record": 3,
+        "raw": {
+          "assay_id": "a-3",
+          "sample_id": "S-1",
+          "assay": "protein",
+          "value": "nan",
+          "unit": "g/L"
+        },
+        "normalized": {
+          "assay_id": "A-3",
+          "sample_id": "S-1",
+          "assay": "protein",
+          "value": null,
+          "unit": "g/L"
+        },
+        "errors": [
+          "invalid_value"
+        ],
+        "accepted": false
+      },
+      {
+        "record": 4,
+        "raw": {
+          "assay_id": "a-4",
+          "sample_id": "S-1",
+          "assay": "protein",
+          "value": "1",
+          "unit": "unknown"
+        },
+        "normalized": {
+          "assay_id": "A-4",
+          "sample_id": "S-1",
+          "assay": "protein",
+          "value": 1.0,
+          "unit": "unknown"
+        },
+        "errors": [
+          "unsupported_unit"
+        ],
+        "accepted": false
+      }
+    ]
+  },
+  "written_this_call": {
+    "samples": 1,
+    "assays": 1
+  }
+}

@@ -34,3 +34,5 @@ salmon_index*/
 STAR_Index/
 RSEM_Index/
 *_Index/
+*.sqlite3
+migration-output/

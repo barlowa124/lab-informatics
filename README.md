@@ -1,27 +1,16 @@
 # labStackDev - RNA-seq quantification pipelines for a stem cell lab
 
-Reproducible, open-source RNA-seq processing that replaced a lab's
-closed-source CLC Genomics Workbench workflow, and was validated against it
-before adoption (**Pearson r = 0.984** on the lab's dataset).
+These RNA-seq pipelines replaced a lab's CLC Genomics Workbench workflow. They were compared with the original outputs before adoption, with Pearson r = 0.984 on the lab's dataset.
 
-**2-minute tour:** [Validation](#validation) for the concordance numbers,
-[Pipelines](#pipelines) for what runs, [Design decisions](#design-decisions)
-for the parts that required engineering judgment.
+[Validation](#validation) records the comparison. [Pipelines](#pipelines) lists the scripts. [Design decisions](#design-decisions) explains the implementation choices.
 
 ## Why this exists
 
-The lab's expression results depended on a GUI-based commercial tool: results
-were reproducible only by the person who clicked through it, runs were tied to
-one workstation, and the workflow could not be version-controlled or tested.
-These pipelines re-implement the quantification path in scriptable form
-(Salmon, STAR+Salmon, pyDESeq2, METAFlux), keep the original outputs as a
-regression baseline, and add the hardware-aware scheduling needed to run them
-on the machines the lab has.
+The lab's original workflow relied on GUI actions tied to one workstation. These pipelines make those steps scriptable and version-controlled. They use Salmon and a STAR/Salmon hybrid for quantification, followed by pyDESeq2 or METAFlux analysis. The original outputs provide a regression baseline. Scheduling is tuned to the lab's hardware.
 
 ## Validation
 
-Quantification accuracy was validated against the lab's original CLC Genomics
-Workbench baseline on the GSE267112 dataset on the author's hardware:
+Quantification outputs were compared with the lab's CLC Genomics Workbench baseline on GSE267112, using the author's hardware.
 
 | Metric | Value |
 |---|---|
@@ -70,10 +59,15 @@ All pipelines live in [`RNAseq_Pipelines/`](RNAseq_Pipelines/).
 
 ## Requirements
 
+### Command-line tools
+
 - [Salmon](https://combine-lab.github.io/salmon/) (`salmon quant`)
 - [STAR](https://github.com/alexdobin/STAR)
 - [RSEM](https://github.com/deweylab/RSEM) (`rsem-prepare-reference`)
 - `pigz`, `zcat`, `xargs`, `find`, `nproc` (standard GNU coreutils)
+
+### Language environments
+
 - Python 3 with `pandas`, `numpy`, `scipy`, `pydeseq2`
 - R with `METAFlux`, `data.table`, `doParallel`, `foreach`, `Matrix`, `osqp`, `stringi`, `stringr`
 - Conda environments `rnaseq` and `salmon_env` (the scripts `conda activate` these)
@@ -131,12 +125,11 @@ Experiment status is a forward-only state machine
 (`registered → queued → assigned → processed → analyzed → locked`);
 locked experiments refuse further mutation.
 
-[`lims/demo_lims.py`](lims/demo_lims.py) registers a synthetic 16-sample
-RNA-seq batch end to end and writes the committed artifacts:
-[`results/lims_summary.json`](results/lims_summary.json) and the full
-audit trail in [`results/lims_audit_log.csv`](results/lims_audit_log.csv).
-This is a schema-and-integrity layer, not Benchling: no UI, no ELN
-narrative editor, no instrument integration.
+Each mutation appends an audit row linked to the previous row by a SHA-256 hash. Tests cover edited rows and a missing interior row. The chain alone cannot detect removal of its final rows or an attacker rewriting the entire chain. That requires a separately trusted copy of the final hash: callers retain an `audit_checkpoint()` snapshot and pass it back as `expected_head`/`expected_rows` to `verify_audit_chain()`.
+
+[`lims/demo_lims.py`](lims/demo_lims.py) runs a synthetic 16-sample batch. Its saved outputs are [`results/lims_summary.json`](results/lims_summary.json) and [`results/lims_audit_log.csv`](results/lims_audit_log.csv).
+
+This prototype has no user interface or ELN narrative editor. It does not connect to instruments.
 
 ## Limitations
 
@@ -153,6 +146,30 @@ narrative editor, no instrument integration.
 ## Related work
 
 - [cultivated-meat-multiomic](https://github.com/barlowa124/cultivated-meat-multiomic) builds its metabolic-flux panel on the METAFlux quantification path in this repo.
+
+## Scientific data migration
+
+Run `python -m lims.migrate --samples examples/migration/samples.csv --assays examples/migration/assays.csv --db migration.sqlite3 --output migration-output/preview --dry-run` to review a synthetic import. Remove `--dry-run` and choose a new output directory to apply it.
+
+The sample CSV requires `sample_id,kind`. The assay CSV requires `assay_id,sample_id,assay,value,unit`.
+
+IDs are trimmed and uppercased. All rows sharing a normalized ID are rejected. An assay must reference a sample accepted in the same import. Values must be finite. Supported units are `g/L`, `mg/L`, `mmol/L`, `AU` and `%`. Units are not converted. Unterminated quoted fields stop the import.
+
+The report retains every parsed record with its outcome and rejection reasons. SQLite stores the original source bytes and their hashes. Accepted records and audit entries are written in one transaction.
+
+`committed` describes the current call. Dry runs and replays return false. A replay also sets `previously_committed` to true and writes no new records. Replays are identified by source bytes and mapping version. Output directories must be new, and the database cannot share a path with an output artifact.
+
+### Acceptance walkthrough
+
+| Requirement | Evidence |
+|---|---|
+| Do not merge ambiguous identifiers | Both `S-2` sample rows are rejected by `test_migration.py` |
+| Do not lose rejected records | Reconciliation retains every raw record and its rejection reasons |
+| Preserve source identity | Tests compare stored source bytes and SHA-256 hashes |
+| Avoid duplicate imports | Replay tests check unchanged table counts |
+| Recover from a write failure | An injected exception rolls back domain records and audit entries |
+
+This is a CSV migration exercise. It does not demonstrate an enterprise LIMS deployment or regulated validation.
 
 ## License
 

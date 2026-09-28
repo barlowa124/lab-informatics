@@ -1,0 +1,5 @@
+assay_id,sample_id,assay,value,unit
+a-1,s-1,protein,2.5,g/L
+a-2,S-2,protein,1,g/L
+a-3,S-1,protein,nan,g/L
+a-4,S-1,protein,1,unknown
