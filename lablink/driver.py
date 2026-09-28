@@ -84,9 +84,10 @@ class InstrumentClient:
             try:
                 chunk = self._sock.recv(4096)
             except socket.timeout as e:
-                # a timeout mid-frame leaves stale bytes; drop them so the
-                # next query cannot consume a late response to this one
-                self._buf = b""
+                # a timeout mid-frame leaves stale bytes, and the socket itself
+                # can still deliver the late response into the next query -
+                # drop the whole connection so the caller reconnects clean
+                self.close()
                 raise TransportError("read timeout") from e
             except OSError as e:
                 raise TransportError(f"read: {e}") from e
@@ -105,7 +106,13 @@ class InstrumentClient:
             raise TransportError(f"write: {e}") from e
 
     def query(self, line: str) -> str:
-        """Send a query and return the response line, reconnecting once on failure."""
+        """Send a query and return the response line, reconnecting on failure.
+
+        A timed-out command may have been processed before the reply was lost,
+        so a retry can execute it twice. Every command in the wire protocol
+        (setpoints, RUN/STOP, fault injection) is idempotent, which is what
+        makes this retry policy safe.
+        """
         last_err: Exception | None = None
         with self._tx:
             for attempt in range(QUERY_RETRIES):

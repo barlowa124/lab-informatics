@@ -103,6 +103,8 @@ class _DeviceState:
                 mode = line.split()[-1]
                 if mode in FAULTS:
                     self.fault = mode
+                    if mode != "NONE":
+                        self.error = f'-301,"Simulated fault {mode}"'
                     return "OK"
                 return '-104,"Unknown fault mode"'
             return '-105,"Unknown command"'

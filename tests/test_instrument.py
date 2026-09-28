@@ -85,6 +85,16 @@ def test_negative_reading_is_a_value_not_an_error(device):
         assert r.value == pytest.approx(-3.21)
 
 
+def test_fault_sets_error_register_once(device):
+    host, port, srv = device
+    srv.device.fault = "NONE"
+    with InstrumentClient(host, port) as c:
+        c.command("SIM:FAULT STUCK")
+        assert "Simulated fault STUCK" in c.error_register()
+        # register pops on read - second read is clean
+        assert c.error_register() == '0,"No error"'
+
+
 def test_concurrent_transactions_do_not_desync(device):
     """Poll + setpoint from two threads must not cross-response."""
     import threading

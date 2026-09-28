@@ -21,9 +21,14 @@
 <h2>alarms</h2>
 <table id="alarms"><tr><th>ts</th><th>channel</th><th>rule</th><th>value</th></tr></table>
 <script>
-async function j(u){ const r = await fetch(u); return r.json(); }
+async function j(u){ const r = await fetch(u); if(!r.ok) throw new Error(u); return r.json(); }
 async function refresh(){
-  const inst = await j('/api/instrument');
+  let inst;
+  try { inst = await j('/api/instrument'); }
+  catch(e) {
+    document.getElementById('idn').textContent = ' | gateway unreachable';
+    return;
+  }
   document.getElementById('idn').textContent = inst.idn ? ' | ' + inst.idn : ' | disconnected';
   const rows = await j('/api/latest');
   const t = document.getElementById('latest');

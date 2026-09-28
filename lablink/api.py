@@ -55,10 +55,14 @@ def create_app(client: InstrumentClient, db_path: str) -> FastAPI:
     def history(channel: str, limit: int = 200):
         if channel.upper() not in CHANNELS:
             raise HTTPException(404, f"unknown channel {channel}")
+        if not 1 <= limit <= 2000:
+            raise HTTPException(422, "limit must be 1-2000")
         return svc.history(channel.upper(), limit)
 
     @app.get("/api/alarms")
     def alarms(limit: int = 50):
+        if not 1 <= limit <= 500:
+            raise HTTPException(422, "limit must be 1-500")
         return svc.alarms(limit)
 
     @app.get("/api/stats")

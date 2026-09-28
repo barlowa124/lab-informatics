@@ -1,4 +1,6 @@
 """Capture service and API tests."""
+import math
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -59,7 +61,8 @@ def test_api_endpoints(device):
         svc_rows = tc.get("/api/latest").json()
         assert len(svc_rows) == 5
         hist = tc.get("/api/history/TEMP").json()
-        assert hist and hist[0]["value"] == pytest.approx(hist[0]["value"])
+        assert hist and isinstance(hist[0]["value"], float) and math.isfinite(hist[0]["value"])
+        assert tc.get("/api/history/TEMP?limit=99999").status_code == 422
         r = tc.post("/api/setpoint/PH", params={"value": 7.4})
         assert r.json()["ok"] is True
         assert tc.get("/api/history/NOPE").status_code == 404

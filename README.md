@@ -61,8 +61,8 @@ pip install -e .[dev]
 python -m pytest tests/
 ```
 
-14 tests cover protocol round-trips, setpoint validation, measurement drift, link-drop
-reconnect, negative-value parsing, concurrent transaction safety, error-row persistence,
+15 tests cover protocol round-trips, setpoint validation, measurement drift, link-drop
+reconnect, negative-value parsing, concurrent transaction safety, error-register reads, error-row persistence,
 alarm firing, and the API surface.
 
 ## honest scope
