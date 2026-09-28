@@ -145,6 +145,9 @@ class ThreadedInstrumentServer(socketserver.ThreadingTCPServer):
         super().__init__((host, port), _Handler)
 
 
+IDLE_SLEEP_S = 3600
+
+
 def serve(host: str = "127.0.0.1", port: int = 5025) -> ThreadedInstrumentServer:
     srv = ThreadedInstrumentServer(host, port)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
@@ -156,6 +159,7 @@ if __name__ == "__main__":
     print(f"emulated bioreactor listening on {s.server_address}")
     try:
         while True:
-            time.sleep(3600)
+            # Idle until interrupted. The server threads handle requests.
+            time.sleep(IDLE_SLEEP_S)
     except KeyboardInterrupt:
         s.shutdown()
