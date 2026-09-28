@@ -1,0 +1,136 @@
+"""Instrument driver: TCP client for the lablink wire protocol.
+
+This is the same shape a driver for a real RS-232/TCP instrument takes:
+open the link, send newline-terminated commands, read one-line responses,
+poll the error register, and reconnect on transport failure. The socket
+object is the only emulator-specific piece.
+"""
+from __future__ import annotations
+
+import socket
+import time
+from dataclasses import dataclass
+
+DEFAULT_PORT = 5025
+CONNECT_TIMEOUT_S = 3.0
+READ_TIMEOUT_S = 2.0
+QUERY_RETRIES = 3
+RECONNECT_BACKOFF_S = 0.05
+
+
+class InstrumentError(Exception):
+    """Device reported an error code in its error register."""
+
+
+class TransportError(Exception):
+    """Link-level failure: connect/read/write/timeout."""
+
+
+@dataclass
+class Reading:
+    channel: str
+    value: float
+    raw: str
+
+
+class InstrumentClient:
+    def __init__(self, host: str = "127.0.0.1", port: int = DEFAULT_PORT):
+        self.host = host
+        self.port = port
+        self._sock: socket.socket | None = None
+        self._buf = b""
+
+    def __enter__(self):
+        self.connect()
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+
+    def connect(self):
+        self.close()
+        try:
+            s = socket.create_connection((self.host, self.port), timeout=CONNECT_TIMEOUT_S)
+            s.settimeout(READ_TIMEOUT_S)
+        except OSError as e:
+            raise TransportError(f"connect {self.host}:{self.port}: {e}") from e
+        self._sock = s
+
+    def close(self):
+        if self._sock is not None:
+            try:
+                self._sock.close()
+            except OSError:
+                pass
+        self._sock = None
+        self._buf = b""
+
+    @property
+    def connected(self) -> bool:
+        return self._sock is not None
+
+    def _readline(self) -> str:
+        if self._sock is None:
+            raise TransportError("not connected")
+        while b"\n" not in self._buf:
+            try:
+                chunk = self._sock.recv(4096)
+            except socket.timeout as e:
+                raise TransportError("read timeout") from e
+            except OSError as e:
+                raise TransportError(f"read: {e}") from e
+            if not chunk:
+                raise TransportError("peer closed connection")
+            self._buf += chunk
+        line, self._buf = self._buf.split(b"\n", 1)
+        return line.decode("ascii", errors="replace").strip()
+
+    def _send_line(self, line: str):
+        if self._sock is None:
+            raise TransportError("not connected")
+        try:
+            self._sock.sendall(line.encode("ascii") + b"\n")
+        except OSError as e:
+            raise TransportError(f"write: {e}") from e
+
+    def query(self, line: str) -> str:
+        """Send a query and return the response line, reconnecting once on failure."""
+        last_err: Exception | None = None
+        for attempt in range(QUERY_RETRIES):
+            try:
+                self._send_line(line)
+                return self._readline()
+            except TransportError as e:
+                last_err = e
+                time.sleep(RECONNECT_BACKOFF_S)
+                try:
+                    self.connect()
+                except TransportError:
+                    pass
+        raise TransportError(f"query {line!r} failed after {QUERY_RETRIES} tries: {last_err}")
+
+    def command(self, line: str) -> str:
+        return self.query(line)
+
+    def identify(self) -> str:
+        return self.query("*IDN?")
+
+    def status(self) -> str:
+        return self.query("STAT?")
+
+    def error_register(self) -> str:
+        return self.query("SYST:ERR?")
+
+    def measure(self, channel: str) -> Reading:
+        raw = self.query(f"MEAS:{channel}?")
+        if raw.startswith("-"):
+            raise InstrumentError(raw)
+        try:
+            return Reading(channel=channel, value=float(raw), raw=raw)
+        except ValueError as e:
+            raise InstrumentError(f"unparseable reading for {channel}: {raw!r}") from e
+
+    def set_setpoint(self, channel: str, value: float):
+        resp = self.command(f"CONF:{channel} {value}")
+        if resp != "OK":
+            raise InstrumentError(resp)

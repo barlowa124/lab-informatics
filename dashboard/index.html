@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>lablink - instrument gateway</title>
+<style>
+  body { font-family: -apple-system, monospace; margin: 24px; background: #0d1117; color: #c9d1d9; }
+  h1 { font-size: 18px; } h2 { font-size: 13px; color: #8b949e; text-transform: uppercase; }
+  table { border-collapse: collapse; margin-bottom: 24px; }
+  td, th { border: 1px solid #30363d; padding: 4px 10px; font-size: 13px; }
+  .bad { color: #f85149; } .ok { color: #3fb950; }
+  canvas { background: #161b22; border: 1px solid #30363d; display: block; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+<h1>lablink <span id="idn"></span></h1>
+<h2>latest</h2>
+<table id="latest"><tr><th>channel</th><th>value</th><th>unit</th><th>quality</th><th>ts</th></tr></table>
+<h2>temperature history</h2>
+<canvas id="chart" width="760" height="200"></canvas>
+<h2>alarms</h2>
+<table id="alarms"><tr><th>ts</th><th>channel</th><th>rule</th><th>value</th></tr></table>
+<script>
+async function j(u){ const r = await fetch(u); return r.json(); }
+async function refresh(){
+  const inst = await j('/api/instrument');
+  document.getElementById('idn').textContent = inst.idn ? ' | ' + inst.idn : ' | disconnected';
+  const rows = await j('/api/latest');
+  const t = document.getElementById('latest');
+  t.innerHTML = '<tr><th>channel</th><th>value</th><th>unit</th><th>quality</th><th>ts</th></tr>' +
+    rows.map(r => `<tr class="${r.quality==='ok'?'ok':'bad'}"><td>${r.channel}</td><td>${Number(r.value).toFixed(3)}</td><td>${r.unit}</td><td>${r.quality}</td><td>${r.ts.slice(11,19)}</td></tr>`).join('');
+  const al = await j('/api/alarms');
+  document.getElementById('alarms').innerHTML = '<tr><th>ts</th><th>channel</th><th>rule</th><th>value</th></tr>' +
+    al.map(a => `<tr class="bad"><td>${a.ts.slice(11,19)}</td><td>${a.channel}</td><td>${a.rule}</td><td>${Number(a.value).toFixed(2)}</td></tr>`).join('');
+  const hist = await j('/api/history/TEMP?limit=180');
+  const c = document.getElementById('chart'), ctx = c.getContext('2d');
+  ctx.clearRect(0,0,c.width,c.height);
+  const vals = hist.filter(h => h.quality==='ok').map(h => h.value);
+  if (vals.length > 1){
+    const lo = Math.min(...vals), hi = Math.max(...vals), pad = (hi-lo||1)*0.15;
+    ctx.strokeStyle = '#58a6ff'; ctx.beginPath();
+    vals.forEach((v,i)=>{
+      const x = i*(c.width-20)/(vals.length-1)+10;
+      const y = c.height-10-(v-lo+pad)/(hi-lo+2*pad)*(c.height-20);
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    });
+    ctx.stroke();
+    ctx.fillStyle='#8b949e'; ctx.fillText(hi.toFixed(2), 10, 12); ctx.fillText(lo.toFixed(2), 10, c.height-4);
+  }
+}
+refresh(); setInterval(refresh, 3000);
+</script>
+</body>
+</html>
