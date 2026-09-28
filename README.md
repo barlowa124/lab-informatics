@@ -149,6 +149,11 @@ narrative editor, no instrument integration.
 - RNA-seq quantification and DE for research use. Not validated for clinical
   or diagnostic purposes.
 
+
+## Related work
+
+- [cultivated-meat-multiomic](https://github.com/barlowa124/cultivated-meat-multiomic) builds its metabolic-flux panel on the METAFlux quantification path in this repo.
+
 ## License
 
 [Apache License 2.0](LICENSE)
