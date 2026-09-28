@@ -28,7 +28,7 @@ async function refresh(){
   const rows = await j('/api/latest');
   const t = document.getElementById('latest');
   t.innerHTML = '<tr><th>channel</th><th>value</th><th>unit</th><th>quality</th><th>ts</th></tr>' +
-    rows.map(r => `<tr class="${r.quality==='ok'?'ok':'bad'}"><td>${r.channel}</td><td>${Number(r.value).toFixed(3)}</td><td>${r.unit}</td><td>${r.quality}</td><td>${r.ts.slice(11,19)}</td></tr>`).join('');
+    rows.map(r => `<tr class="${r.quality==='ok'?'ok':'bad'}"><td>${r.channel}</td><td>${r.value===null?'&mdash;':Number(r.value).toFixed(3)}</td><td>${r.unit}</td><td>${r.quality}</td><td>${r.ts.slice(11,19)}</td></tr>`).join('');
   const al = await j('/api/alarms');
   document.getElementById('alarms').innerHTML = '<tr><th>ts</th><th>channel</th><th>rule</th><th>value</th></tr>' +
     al.map(a => `<tr class="bad"><td>${a.ts.slice(11,19)}</td><td>${a.channel}</td><td>${a.rule}</td><td>${Number(a.value).toFixed(2)}</td></tr>`).join('');

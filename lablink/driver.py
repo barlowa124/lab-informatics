@@ -8,6 +8,7 @@ object is the only emulator-specific piece.
 from __future__ import annotations
 
 import socket
+import threading
 import time
 from dataclasses import dataclass
 
@@ -16,6 +17,7 @@ CONNECT_TIMEOUT_S = 3.0
 READ_TIMEOUT_S = 2.0
 QUERY_RETRIES = 3
 RECONNECT_BACKOFF_S = 0.05
+MAX_LINE_BYTES = 65536
 
 
 class InstrumentError(Exception):
@@ -39,6 +41,9 @@ class InstrumentClient:
         self.port = port
         self._sock: socket.socket | None = None
         self._buf = b""
+        # one transaction (send + read) at a time: the same socket is shared
+        # between the capture poll thread and API handler threads
+        self._tx = threading.Lock()
 
     def __enter__(self):
         self.connect()
@@ -73,9 +78,15 @@ class InstrumentClient:
         if self._sock is None:
             raise TransportError("not connected")
         while b"\n" not in self._buf:
+            if len(self._buf) > MAX_LINE_BYTES:
+                self._buf = b""
+                raise TransportError("frame exceeded line limit")
             try:
                 chunk = self._sock.recv(4096)
             except socket.timeout as e:
+                # a timeout mid-frame leaves stale bytes; drop them so the
+                # next query cannot consume a late response to this one
+                self._buf = b""
                 raise TransportError("read timeout") from e
             except OSError as e:
                 raise TransportError(f"read: {e}") from e
@@ -96,17 +107,18 @@ class InstrumentClient:
     def query(self, line: str) -> str:
         """Send a query and return the response line, reconnecting once on failure."""
         last_err: Exception | None = None
-        for attempt in range(QUERY_RETRIES):
-            try:
-                self._send_line(line)
-                return self._readline()
-            except TransportError as e:
-                last_err = e
-                time.sleep(RECONNECT_BACKOFF_S)
+        with self._tx:
+            for attempt in range(QUERY_RETRIES):
                 try:
-                    self.connect()
-                except TransportError:
-                    pass
+                    self._send_line(line)
+                    return self._readline()
+                except TransportError as e:
+                    last_err = e
+                    time.sleep(RECONNECT_BACKOFF_S)
+                    try:
+                        self.connect()
+                    except TransportError:
+                        pass
         raise TransportError(f"query {line!r} failed after {QUERY_RETRIES} tries: {last_err}")
 
     def command(self, line: str) -> str:
@@ -123,12 +135,12 @@ class InstrumentClient:
 
     def measure(self, channel: str) -> Reading:
         raw = self.query(f"MEAS:{channel}?")
-        if raw.startswith("-"):
-            raise InstrumentError(raw)
         try:
+            # a reading can legitimately be negative; only unparseable
+            # responses (which include the device's error strings) are errors
             return Reading(channel=channel, value=float(raw), raw=raw)
         except ValueError as e:
-            raise InstrumentError(f"unparseable reading for {channel}: {raw!r}") from e
+            raise InstrumentError(f"measurement for {channel}: {raw!r}") from e
 
     def set_setpoint(self, channel: str, value: float):
         resp = self.command(f"CONF:{channel} {value}")

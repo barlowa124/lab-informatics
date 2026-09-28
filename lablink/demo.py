@@ -1,8 +1,6 @@
 """End-to-end demo: emulator + driver + capture + API in one process."""
 from __future__ import annotations
 
-import time
-
 import uvicorn
 
 from .api import create_app

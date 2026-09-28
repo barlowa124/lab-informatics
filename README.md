@@ -15,6 +15,8 @@ emulator for a real instrument means changing the transport, not the driver.
   (`SIM:FAULT STUCK|NOISY|DROP`) exist so tests can exercise driver failure handling.
 - `lablink/driver.py` - `InstrumentClient`: connect/reconnect, `query`/`command`,
   `MEAS:<ch>?` readings, `CONF:<ch> <value>` setpoints, `SYST:ERR?` error register.
+  One transaction at a time on the shared socket so the capture loop and API calls
+  cannot interleave frames.
 - `lablink/capture.py` - polling service. Each channel is read on an interval, validated
   into a typed `ReadingRow`, persisted to SQLite, and checked against alarm rules.
   Transport and device errors are stored as rows too. A silent gap in instrument data is
@@ -59,8 +61,9 @@ pip install -e .[dev]
 python -m pytest tests/
 ```
 
-12 tests cover protocol round-trips, setpoint validation, measurement drift, link-drop
-reconnect, error-row persistence, alarm firing, and the API surface.
+14 tests cover protocol round-trips, setpoint validation, measurement drift, link-drop
+reconnect, negative-value parsing, concurrent transaction safety, error-row persistence,
+alarm firing, and the API surface.
 
 ## honest scope
 

@@ -3,19 +3,29 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 
 from .capture import CaptureService
-from .driver import InstrumentClient, TransportError
+from .driver import InstrumentClient, InstrumentError, TransportError
 from .protocol import CHANNELS
 
 DASHBOARD = Path(__file__).resolve().parent.parent / "dashboard" / "index.html"
 
 
 def create_app(client: InstrumentClient, db_path: str) -> FastAPI:
-    app = FastAPI(title="lablink", description="Instrument capture gateway")
     svc = CaptureService(client, db_path)
+
+    @asynccontextmanager
+    async def lifespan(app):
+        svc.start()
+        yield
+        svc.stop()
+
+    app = FastAPI(title="lablink", description="Instrument capture gateway",
+                  lifespan=lifespan)
     app.state.capture = svc
 
     @app.get("/")
@@ -60,15 +70,12 @@ def create_app(client: InstrumentClient, db_path: str) -> FastAPI:
         channel = channel.upper()
         if channel not in CHANNELS:
             raise HTTPException(404, f"unknown channel {channel}")
-        client.set_setpoint(channel, value)
+        try:
+            client.set_setpoint(channel, value)
+        except InstrumentError as e:
+            raise HTTPException(400, str(e)) from e
+        except TransportError as e:
+            raise HTTPException(502, str(e)) from e
         return {"ok": True, "channel": channel, "setpoint": value}
-
-    @app.on_event("startup")
-    def _start():
-        svc.start()
-
-    @app.on_event("shutdown")
-    def _stop():
-        svc.stop()
 
     return app

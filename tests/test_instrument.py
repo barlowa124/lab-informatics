@@ -75,3 +75,38 @@ def test_unreachable_host_raises_transport():
     c = InstrumentClient("127.0.0.1", 59999)
     with pytest.raises(TransportError):
         c.connect()
+
+
+def test_negative_reading_is_a_value_not_an_error(device):
+    host, port, _ = device
+    with InstrumentClient(host, port) as c:
+        c.query = lambda line: "-3.21"  # force a negative response
+        r = c.measure("TEMP")
+        assert r.value == pytest.approx(-3.21)
+
+
+def test_concurrent_transactions_do_not_desync(device):
+    """Poll + setpoint from two threads must not cross-response."""
+    import threading
+
+    host, port, _ = device
+    with InstrumentClient(host, port) as c:
+        errs = []
+
+        def poller():
+            for _ in range(30):
+                try:
+                    c.measure("TEMP")
+                except Exception as e:
+                    errs.append(e)
+
+        def configurer():
+            for i in range(15):
+                try:
+                    c.set_setpoint("AGIT", 100.0 + i * 10)
+                except Exception as e:
+                    errs.append(e)
+
+        t1, t2 = threading.Thread(target=poller), threading.Thread(target=configurer)
+        t1.start(); t2.start(); t1.join(); t2.join()
+        assert not errs
