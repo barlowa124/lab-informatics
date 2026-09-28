@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS alarms (
     rule TEXT NOT NULL,
     value REAL NOT NULL
 );
+CREATE INDEX IF NOT EXISTS idx_readings_channel_id
+    ON readings (channel, id);
 """
 
 
@@ -122,8 +124,10 @@ class CaptureService:
     def latest(self) -> list[dict]:
         with self._lock:
             cur = self._db.execute(
-                "SELECT channel, value, unit, quality, ts FROM readings r1 "
-                "WHERE id = (SELECT MAX(id) FROM readings WHERE channel = r1.channel)")
+                "SELECT r.channel, r.value, r.unit, r.quality, r.ts "
+                "FROM readings r JOIN ("
+                "  SELECT channel, MAX(id) AS mid FROM readings GROUP BY channel"
+                ") m ON r.id = m.mid")
             return [{"channel": c, "value": v, "unit": u, "quality": q, "ts": t}
                     for c, v, u, q, t in cur.fetchall()]
 
