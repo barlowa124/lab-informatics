@@ -85,3 +85,45 @@ models:
           - accepted_values:
               arguments:
                 values: ["approved", "authored", "reviewed"]
+
+  - name: stg_readings
+    description: Instrument channel readings captured by the lablink service.
+    columns:
+      - name: reading_id
+        tests: [unique, not_null]
+      - name: captured_at
+        tests: [not_null]
+      - name: channel
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["TEMP", "PH", "DO", "AGIT", "WEIGHT"]
+      - name: unit
+        tests: [not_null]
+      - name: quality
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["ok", "device-error", "transport-error"]
+
+  - name: stg_alarms
+    description: Alarm events raised when a reading breached a rule.
+    columns:
+      - name: alarm_id
+        tests: [unique, not_null]
+      - name: fired_at
+        tests: [not_null]
+      - name: channel
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["TEMP", "PH", "DO", "AGIT", "WEIGHT"]
+      - name: rule
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["temp-out-of-band", "ph-out-of-band", "do-low"]
+      - name: value
+        tests: [not_null]

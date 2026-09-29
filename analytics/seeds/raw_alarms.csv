@@ -1,0 +1,5 @@
+id,ts,channel,rule,value
+1,2026-09-29T23:45:01.296581+00:00,TEMP,temp-out-of-band,22.062
+2,2026-09-29T23:45:02.305991+00:00,TEMP,temp-out-of-band,29.596
+3,2026-09-29T23:45:03.316839+00:00,TEMP,temp-out-of-band,33.326
+4,2026-09-29T23:45:04.320142+00:00,TEMP,temp-out-of-band,35.198

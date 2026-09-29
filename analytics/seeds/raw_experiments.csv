@@ -1,4 +1,4 @@
 experiment_id,name,status,meta,created
-EXP-PR-0017,Protein panel lot 12,processed,"{""pipeline"": ""bradford"", ""lab"": ""stem-cell""}",1790719746.527589
-EXP-RNA-0042,iPSC batch 4 RNA-seq,locked,"{""pipeline"": ""salmon_direct"", ""genome"": ""GRCh38"", ""lab"": ""stem-cell""}",1790719746.525321
-EXP-RNA-0051,iPSC batch 5 RNA-seq (planned),registered,"{""pipeline"": ""salmon_hybrid"", ""genome"": ""GRCh38"", ""lab"": ""stem-cell""}",1790719746.528018
+EXP-PR-0017,Protein panel lot 12,processed,"{""pipeline"": ""bradford"", ""lab"": ""stem-cell""}",1790725501.2809432
+EXP-RNA-0042,iPSC batch 4 RNA-seq,locked,"{""pipeline"": ""salmon_direct"", ""genome"": ""GRCh38"", ""lab"": ""stem-cell""}",1790725501.275567
+EXP-RNA-0051,iPSC batch 5 RNA-seq (planned),registered,"{""pipeline"": ""salmon_hybrid"", ""genome"": ""GRCh38"", ""lab"": ""stem-cell""}",1790725501.281388

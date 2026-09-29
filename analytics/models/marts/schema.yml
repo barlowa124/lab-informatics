@@ -45,3 +45,32 @@ models:
         tests: [unique, not_null]
       - name: transition_count
         tests: [not_null]
+
+  - name: fct_reading
+    columns:
+      - name: reading_id
+        tests: [unique, not_null]
+      - name: quality
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["ok", "device-error", "transport-error"]
+
+  - name: fct_alarm
+    columns:
+      - name: alarm_id
+        tests: [unique, not_null]
+      - name: reading_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('fct_reading')
+                field: reading_id
+
+  - name: mart_channel_health
+    columns:
+      - name: channel
+        tests: [unique, not_null]
+      - name: reading_count
+        tests: [not_null]

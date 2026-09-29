@@ -20,19 +20,26 @@ seeds/raw_*.csv  -> staging (views) -> intermediate (views) -> marts (tables)
 `generate_fixtures.py` produces the seeds by driving the real `Registry`
 API. Samples are registered, wells assigned, results attached, and the
 audit log is written by the registry itself, including one e-signature
-over the lock transition. Seeds are checked in so `dbt build` works
-standalone.
+over the lock transition. The capture seeds are produced the same way.
+A `CaptureService` polls the emulated instrument, including a
+dropped-link fault that yields real transport-error rows, and the cold
+start produces genuine `temp-out-of-band` alarms while the vessel ramps
+to setpoint. Seeds are checked in so `dbt build` works standalone.
 
 | Layer | Model | Grain |
 |---|---|---|
 | staging | `stg_samples`, `stg_experiments`, `stg_plates`, `stg_results`, `stg_audit_log`, `stg_audit_signature` | one row per source row, `meta` JSON unpacked, epoch floats to timestamps |
+| staging | `stg_readings`, `stg_alarms` | one row per captured reading / raised alarm |
 | intermediate | `int_well_assignments`, `int_state_durations` | well-to-sample-to-experiment join; `LEAD()` over audit transitions gives time-in-state |
 | marts | `dim_sample`, `dim_experiment` | conformed entities |
 | marts | `fct_plate_well`, `fct_result` | one row per well assignment / attached result |
+| marts | `fct_reading`, `fct_alarm` | one row per channel reading / alarm, alarms joined to the reading that breached |
 | marts | `mart_experiment_audit` | per-experiment lifecycle rollup: transition count, time in pipeline, signature coverage |
+| marts | `mart_channel_health` | per-channel rollup: quality mix, ok-rate, value range, alarm count |
 
 Measured output on the committed seeds: 24 samples, 3 experiments, 24
-well assignments, 16 results, 75 audit rows, 1 signature.
+well assignments, 16 results, 75 audit rows, 1 signature, 40 readings
+(35 ok, 5 transport-error), 4 alarms.
 
 ## Why a star schema here
 
@@ -49,7 +56,7 @@ locations).
 
 ## Tests
 
-43 data tests plus two singular domain tests.
+65 data tests plus four singular domain tests.
 
 - `assert_audit_seq_contiguous` requires the audit log's `seq` to have
   no gaps. The hash chain proves ordering, and contiguity proves no row
@@ -57,6 +64,13 @@ locations).
 - `assert_locked_experiments_signed` requires every `locked` experiment
   to carry at least one e-signature, the review step the registry
   expects before a record is finalized.
+- `assert_alarms_backed_by_ok_reading` requires every alarm to join to
+  the `ok` reading that breached its rule. The capture service writes
+  both rows in one persist pass, so a dangling alarm means it fired
+  without evidence.
+- `assert_error_readings_null_value` requires failed captures to carry
+  a null value and ok readings to carry a number, so bad readings can't
+  be averaged into channel stats.
 
 ## Run it
 
@@ -67,5 +81,5 @@ DBT_PROFILES_DIR=. dbt build
 ```
 
 `dbt build` seeds the raw tables, builds all models, and runs the test
-suite in one pass. `lab_lims.duckdb` is gitignored; regenerate seeds with
+suite in one pass. `lab_lims.duckdb` is gitignored. Regenerate seeds with
 `python analytics/generate_fixtures.py` from the repo root.
