@@ -1,9 +1,8 @@
 # lab-informatics
 
-Software for lab data plumbing: LIMS data migration and instrument-output
-capture. Two related projects merged into one repository, each a
-self-contained package with its own tests and commit history (imported via
-subtree merge).
+Software for lab data plumbing. Two related projects merged into one
+repository, each a self-contained package with its own tests and commit
+history (imported via subtree merge).
 
 ## Packages
 
@@ -24,6 +23,6 @@ Each subdirectory retains its own `AGENTS.md` with project-specific rules
 
 ## Why one repo
 
-Both sit at the lab-software boundary: getting data out of instruments and
-records into databases, with the same emphasis on byte-preserving capture
-and auditable migration rather than validated-system claims.
+Both sit at the lab-software boundary: getting data out of instruments,
+getting records into databases. Both emphasize byte-preserving capture
+and auditable migration over validated-system claims.

@@ -1,0 +1,33 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  labstackdev:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - working-directory: labStackDev
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pandas scipy
+          python -m pytest -q tests/
+
+  lab-instrument-gateway:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - working-directory: lab_instrument_gateway
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[test]
+          python -m pytest -q tests/
