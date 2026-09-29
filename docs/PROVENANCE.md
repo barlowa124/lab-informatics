@@ -2,8 +2,8 @@
 
 Shared across this portfolio. Every computed artifact carries a manifest
 binding it to the code, config, and inputs that produced it. The manifest
-is part of the result — written next to outputs, embedded in API
-responses — not a log line.
+is part of the result, written next to outputs and embedded in API
+responses. It is not a log line.
 
 ## Manifest schema
 
@@ -30,7 +30,7 @@ responses — not a log line.
 - Missing inputs are omitted from `input_sha256`, not zeroed.
 - `output_sha256` may be added after writing outputs; the manifest is
   rewritten once, then treated as immutable.
-- Verification recomputes the hashes and compares — it never trusts
+- Verification recomputes the hashes and compares. It never trusts
   stored values.
 
 ## Implementations
