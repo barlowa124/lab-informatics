@@ -5,3 +5,16 @@ lab_lims_analytics:
       type: duckdb
       path: lab_lims.duckdb
       threads: 4
+    # Example warehouse target. Uncomment and fill in to point the same
+    # models at Snowflake; see README "Porting notes" for the handful of
+    # engine-specific spots to adjust.
+    # prod:
+    #   type: snowflake
+    #   account: <org>-<account>
+    #   user: <user>
+    #   password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+    #   role: <role>
+    #   database: <database>
+    #   warehouse: <warehouse>
+    #   schema: analytics
+    #   threads: 4

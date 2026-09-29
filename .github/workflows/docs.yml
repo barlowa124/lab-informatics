@@ -1,0 +1,43 @@
+name: docs
+
+on:
+  push:
+    branches: [main]
+    paths: [analytics/**]
+  workflow_dispatch:
+
+permissions:
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  dbt-docs:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - working-directory: analytics
+        run: |
+          python -m pip install --upgrade pip
+          pip install "dbt-duckdb>=1.8,<1.10"
+          DBT_PROFILES_DIR=. dbt build
+          DBT_PROFILES_DIR=. dbt docs generate
+      - run: |
+          mkdir -p site
+          cp analytics/target/index.html analytics/target/catalog.json \
+             analytics/target/manifest.json site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

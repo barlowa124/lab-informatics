@@ -6,10 +6,10 @@ under a hash-chained audit log. This project models them into staging,
 intermediate, and mart layers so the lab's activity can be queried as
 clean tables.
 
-The warehouse is DuckDB (`dbt-duckdb`). The models use ANSI-portable SQL
-and standard dbt features, so they translate to a Snowflake-class
-warehouse with only source configuration changes. Nothing here claims
-production Snowflake deployment.
+The warehouse is DuckDB (`dbt-duckdb`). The models use mostly portable
+SQL and standard dbt features. The handful of engine-specific spots are
+listed under Porting notes below. Nothing here claims production
+Snowflake deployment.
 
 ## Layout
 
@@ -83,3 +83,21 @@ DBT_PROFILES_DIR=. dbt build
 `dbt build` seeds the raw tables, builds all models, and runs the test
 suite in one pass. `lab_lims.duckdb` is gitignored. Regenerate seeds with
 `python analytics/generate_fixtures.py` from the repo root.
+
+Generated docs (lineage graph, column-level tests) publish to GitHub
+Pages on pushes that touch `analytics/`. See `.github/workflows/docs.yml`
+and https://barlowa124.github.io/lab-informatics/.
+
+## Porting notes
+
+`profiles.yml` carries a commented `prod` Snowflake output as the shape
+a warehouse target would take. The models are mostly ANSI, with these
+known engine-specific spots:
+
+- `stg_readings` and `stg_alarms` cast seed timestamp strings with
+  `timestamptz`, the DuckDB type name. Snowflake wants `timestamp_tz`.
+- `int_state_durations` computes seconds-in-state as
+  `epoch(exited_at - entered_at)`, DuckDB interval math. Snowflake uses
+  `datediff('second', entered_at, exited_at)`.
+- `dbt seed` works on both engines at this fixture size. For real
+  volumes, raw tables would come from a stage and `COPY INTO` instead.
