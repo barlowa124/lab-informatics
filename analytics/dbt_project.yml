@@ -1,0 +1,16 @@
+name: lab_lims_analytics
+version: 1.0.0
+profile: lab_lims_analytics
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+
+models:
+  lab_lims_analytics:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: view
+    marts:
+      +materialized: table

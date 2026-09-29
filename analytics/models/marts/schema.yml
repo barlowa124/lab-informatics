@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: dim_sample
+    columns:
+      - name: sample_id
+        tests: [unique, not_null]
+
+  - name: dim_experiment
+    columns:
+      - name: experiment_id
+        tests: [unique, not_null]
+
+  - name: fct_plate_well
+    columns:
+      - name: well_assignment_id
+        tests: [unique, not_null]
+      - name: sample_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_sample')
+                field: sample_id
+      - name: experiment_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_experiment')
+                field: experiment_id
+
+  - name: fct_result
+    columns:
+      - name: result_id
+        tests: [unique, not_null]
+      - name: experiment_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('dim_experiment')
+                field: experiment_id
+
+  - name: mart_experiment_audit
+    columns:
+      - name: experiment_id
+        tests: [unique, not_null]
+      - name: transition_count
+        tests: [not_null]

@@ -1,0 +1,87 @@
+version: 2
+
+models:
+  - name: stg_samples
+    description: Registered samples with tissue and batch unpacked from meta.
+    columns:
+      - name: sample_id
+        tests: [unique, not_null]
+      - name: kind
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["rna", "protein"]
+      - name: registered_at
+        tests: [not_null]
+
+  - name: stg_experiments
+    description: Experiments with pipeline metadata unpacked from meta.
+    columns:
+      - name: experiment_id
+        tests: [unique, not_null]
+      - name: status
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["registered", "queued", "assigned",
+                         "processed", "analyzed", "locked"]
+
+  - name: stg_plates
+    description: Well-level assignments on plates.
+    tests:
+      - unique:
+          column_name: "experiment_id || '-' || plate || '-' || well"
+    columns:
+      - name: sample_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_samples')
+                field: sample_id
+      - name: experiment_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_experiments')
+                field: experiment_id
+
+  - name: stg_results
+    columns:
+      - name: result_id
+        tests: [unique, not_null]
+      - name: experiment_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_experiments')
+                field: experiment_id
+      - name: content_sha256
+        tests: [unique, not_null]
+
+  - name: stg_audit_log
+    columns:
+      - name: seq
+        tests: [unique, not_null]
+      - name: entity
+        tests: [not_null]
+      - name: hash
+        tests: [unique, not_null]
+
+  - name: stg_audit_signature
+    columns:
+      - name: sig_id
+        tests: [unique, not_null]
+      - name: audit_seq
+        tests:
+          - relationships:
+              arguments:
+                to: ref('stg_audit_log')
+                field: seq
+      - name: meaning
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["approved", "authored", "reviewed"]

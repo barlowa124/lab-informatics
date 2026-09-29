@@ -27,6 +27,7 @@ ML).
 |---|---|
 | `labStackDev/` | LIMS migration prototype: versioned CSV normalization, rejection rules, transactional migration with rollback, reconciliation that must account for every parsed record. Synthetic fixtures only. |
 | `lab_instrument_gateway/` | `lablink`: instrument-side capture gateway — protocol parsing, a simulator for offline development, FastAPI capture service, and a small dashboard. |
+| `analytics/` | dbt project (DuckDB) over the LIMS tables — staging/intermediate/mart layers, schema and domain tests, run by CI. See `analytics/README.md`. |
 
 ## Running tests
 
