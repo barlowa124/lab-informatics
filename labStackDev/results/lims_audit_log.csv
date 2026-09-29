@@ -1,0 +1,40 @@
+seq,ts,entity,entity_id,action,detail,hash
+1,1790458040.171027,experiment,EXP-RNA-0042,create,"{""name"": ""iPSC batch 4 RNA-seq""}",b97f3a9993565f34cb9c61e3c19494068d97475465197441c568af1c444070a8
+2,1790458040.171076,experiment,EXP-RNA-0042,transition,"{""from"": ""registered"", ""to"": ""queued""}",2c0721cd8ac27b5bc2a57d028604f24e368354a124e5bdf0eec49268cc63a591
+3,1790458040.171092,experiment,EXP-RNA-0042,transition,"{""from"": ""queued"", ""to"": ""assigned""}",6c8c8966385a4a9aea1f0d292c8e659edd1b1b01800a83225e42affebd314932
+4,1790458040.1711192,sample,S001,register,"{""kind"": ""rna""}",a27a84d837b2593f96b6d992dbd8a80501cd680c5484b6b6c0957aa90555ea10
+5,1790458040.171154,plate,EXP-RNA-0042:P1:A01,assign,"{""sample_id"": ""S001""}",c2fa0ae78004f96bfbea42bf9c5c66c53f7794ef899f5a421a9703ae67bb09d4
+6,1790458040.171168,sample,S002,register,"{""kind"": ""rna""}",534cbadc08e777985ca3859fb82060deca8f4118198d7e4677ab2af73695e703
+7,1790458040.171183,plate,EXP-RNA-0042:P1:A02,assign,"{""sample_id"": ""S002""}",284fcd3685c580af93864484b110f1048cc05d54202bc39a46ecb027cdc7541f
+8,1790458040.1711948,sample,S003,register,"{""kind"": ""rna""}",6f333959de5e7b3e66b427b00fb30b7e30235561b31d97c2455aa78b1d23e24a
+9,1790458040.171207,plate,EXP-RNA-0042:P1:A03,assign,"{""sample_id"": ""S003""}",14448632d80ce1eff663b1722bc7fb711d5bedd8cd40bbab588b5ee56793413f
+10,1790458040.171218,sample,S004,register,"{""kind"": ""rna""}",76aefa580ead980275210eb0470a530fc3c77396daeba3d3e75bc4e42810a5e4
+11,1790458040.1712298,plate,EXP-RNA-0042:P1:A04,assign,"{""sample_id"": ""S004""}",4cf406d9da58c33a9dc7c73bdc720381bb0c40469904b1a0c43e01e469e6e05f
+12,1790458040.1712399,sample,S005,register,"{""kind"": ""rna""}",c52d70a732b84dc2d40ea097423ccf383a00afccaa30ee1f6beb5ab77f90c573
+13,1790458040.171253,plate,EXP-RNA-0042:P1:B01,assign,"{""sample_id"": ""S005""}",a74b685e0cab51feb1d738e98901b85848d802b06adad1d3f24a94f697727c77
+14,1790458040.171263,sample,S006,register,"{""kind"": ""rna""}",d4ac24df3d653c8b4b96c35a1769bdda3c5317f8d4e4c4a7eb0f800d10f798b2
+15,1790458040.171276,plate,EXP-RNA-0042:P1:B02,assign,"{""sample_id"": ""S006""}",452fab2137a1b5c42ee7205410e79fc9eba82206c06f3308fc131fc392c0b497
+16,1790458040.171285,sample,S007,register,"{""kind"": ""rna""}",f7516eccc148e46e47f7b9189f152a2ad89bc002873d9c9e81ea8f9d6d6eaeb8
+17,1790458040.171297,plate,EXP-RNA-0042:P1:B03,assign,"{""sample_id"": ""S007""}",2584465d6341563875aa867e32b9d424aae923b650b0dcffef7314490d3259bf
+18,1790458040.171307,sample,S008,register,"{""kind"": ""rna""}",ac62788c86737f6b4a8c559f2364a5971714ec00df1af77be8941a533651e1f0
+19,1790458040.171319,plate,EXP-RNA-0042:P1:B04,assign,"{""sample_id"": ""S008""}",9aae29d81613c078381544d21b3348d10a88c58a205a6514763af23033be56f1
+20,1790458040.171329,sample,S009,register,"{""kind"": ""rna""}",d9dba60dea1c7ce4de69bc56fdf135422d1ff770fc87249adfbf32cd496787a5
+21,1790458040.171341,plate,EXP-RNA-0042:P1:C01,assign,"{""sample_id"": ""S009""}",31bb322fdefa09e23b73de91193defcff0c50ba479ba375ac02a2a91beca5f76
+22,1790458040.171356,sample,S010,register,"{""kind"": ""rna""}",478955d143a36c996d5f5149e9e9ebc790a858cc8965ddf3b9f4652558279a39
+23,1790458040.171368,plate,EXP-RNA-0042:P1:C02,assign,"{""sample_id"": ""S010""}",bab7c0c262d9987c2359082ae10b6eff53fd575087a07d731907fcbcb9d8ff8a
+24,1790458040.171378,sample,S011,register,"{""kind"": ""rna""}",18cbf3c871909509af6e0d35de9ae5fd12f274db23f5228669755f2113643e9d
+25,1790458040.171391,plate,EXP-RNA-0042:P1:C03,assign,"{""sample_id"": ""S011""}",6c813e3eb458655116abf946c22ae4ea5facd001954cf43458fcd181213b4938
+26,1790458040.171402,sample,S012,register,"{""kind"": ""rna""}",7f33e6ea3aafa853b5a53690f5e24ab8e04599ce207b42e1be018ae32f3c6dc8
+27,1790458040.171414,plate,EXP-RNA-0042:P1:C04,assign,"{""sample_id"": ""S012""}",a8c213dbed5a97492dab83213aeffaf2268463de47387269ecfa07b8b2e20cab
+28,1790458040.171424,sample,S013,register,"{""kind"": ""rna""}",67022e2ec9e158d5042994d03b8087ab227865a37b1801a3a293c91865d52b2c
+29,1790458040.171436,plate,EXP-RNA-0042:P1:D01,assign,"{""sample_id"": ""S013""}",16e56709a360ec837e7696845936161c3f3149a8fdb22bbc468d4861ec1ff34a
+30,1790458040.171446,sample,S014,register,"{""kind"": ""rna""}",11b508db7cbad4d28f7a1dfb1bfac287539e1ede4d78c9515d038f218fdeaaa6
+31,1790458040.171458,plate,EXP-RNA-0042:P1:D02,assign,"{""sample_id"": ""S014""}",ad466b27d78e85b1371a28a08a19b6a9b08f48e04fed83180859b3be2577e669
+32,1790458040.171467,sample,S015,register,"{""kind"": ""rna""}",25f1278c7a141144b76830ad926cebd771371ed4c8d73773838e94945850f025
+33,1790458040.171479,plate,EXP-RNA-0042:P1:D03,assign,"{""sample_id"": ""S015""}",b1c0d1b7c6fac0c97994f648b1941d29e0a456b5190eb1b83f7e00adfc724ae6
+34,1790458040.171489,sample,S016,register,"{""kind"": ""rna""}",a7ab006e1c5fa63487bed2625624ca78a3aa8a7a84232c799fccc6edb21eda24
+35,1790458040.1715012,plate,EXP-RNA-0042:P1:D04,assign,"{""sample_id"": ""S016""}",681227980beb581dba51e84cf8608a77523c3301ac2232105c6421a9aa953b51
+36,1790458040.171511,experiment,EXP-RNA-0042,transition,"{""from"": ""assigned"", ""to"": ""processed""}",9eca12a95442a74aaa7aa9331d7a702ba4268cdefad5a972529741c841e890b5
+37,1790458040.171521,experiment,EXP-RNA-0042,transition,"{""from"": ""processed"", ""to"": ""analyzed""}",e99c62b8646a5b809bf3c1435be99454ecc3929b0771b71899ff28f6f0acad06
+38,1790458040.1715388,result,EXP-RNA-0042:quant.sf.S001,attach,"{""sha256"": ""f0578ddf8acba2952a18612b06cbc42b560599adaae1262ddbbe4ceca7fd59fd""}",13274ce03b5abebbd90e525464d4d318e68e8b1d8463252a2a7287dcdcb11816
+39,1790458040.17155,experiment,EXP-RNA-0042,transition,"{""from"": ""analyzed"", ""to"": ""locked""}",0a827ff743f13c489d1a409c33fc164c8b905b0faa227c1579c9d9c1fe5bdc44
