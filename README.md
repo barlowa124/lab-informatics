@@ -1,5 +1,8 @@
 # lab-informatics
 
+[![ci](https://github.com/barlowa124/lab-informatics/actions/workflows/ci.yml/badge.svg)](https://github.com/barlowa124/lab-informatics/actions/workflows/ci.yml)
+
+
 Software for lab data plumbing. Two related projects merged into one
 repository, each a self-contained package with its own tests and commit
 history (imported via subtree merge).
