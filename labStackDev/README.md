@@ -129,6 +129,8 @@ Each mutation appends an audit row linked to the previous row by a SHA-256 hash.
 
 [`lims/demo_lims.py`](lims/demo_lims.py) runs a synthetic 16-sample batch. Its saved outputs are [`results/lims_summary.json`](results/lims_summary.json) and [`results/lims_audit_log.csv`](results/lims_audit_log.csv).
 
+[`lims/esign.py`](lims/esign.py) adds the Part-11-shaped layer: `sign()` binds an HMAC-SHA256 signature to an audit row's hash plus signer identity and meaning (authored/reviewed/approved), mutations accept a `reason=` that lands inside the hashed detail, and `unsigned_rows()` reports unapproved work. `verify_signatures()` recomputes signatures *and* the audit chain together — a signature over a tampered row fails even when the stored `hash` field was edited along with it. Key source is `LIMS_SIGNING_KEY` or an argument. This is the signature/audit-trail mechanics, not PKI identity, and it does not make the system Part 11 conformant (access control, timestamp authority, retention are all absent). See [`VALIDATION.md`](VALIDATION.md) for the IQ/OQ/PQ mapping and honest scope.
+
 This prototype has no user interface or ELN narrative editor. It does not connect to instruments.
 
 ## Limitations

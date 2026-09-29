@@ -57,6 +57,15 @@ CREATE TABLE IF NOT EXISTS audit_log (
     prev_hash  TEXT NOT NULL,
     hash       TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS audit_signature (
+    sig_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+    audit_seq  INTEGER NOT NULL,
+    signer     TEXT NOT NULL,
+    meaning    TEXT NOT NULL,
+    ts         REAL NOT NULL,
+    signature  TEXT NOT NULL,
+    FOREIGN KEY (audit_seq) REFERENCES audit_log(seq)
+);
 """
 
 STATUS_ORDER = ["registered", "queued", "assigned",
@@ -82,8 +91,12 @@ class Registry:
 
     # ── audit ────────────────────────────────────────────────────────
 
-    def _audit(self, entity, entity_id, action, detail=None):
-        detail = json.dumps(detail or {}, sort_keys=True)
+    def _audit(self, entity, entity_id, action, detail=None,
+               reason=None):
+        d = dict(detail or {})
+        if reason is not None:
+            d["reason"] = reason
+        detail = json.dumps(d, sort_keys=True)
         prev = self.db.execute(
             "SELECT hash FROM audit_log ORDER BY seq DESC LIMIT 1"
         ).fetchone()
@@ -169,7 +182,7 @@ class Registry:
         if self._status(experiment_id) == "locked":
             raise LimsError(f"{experiment_id} is locked, mutations refused")
 
-    def transition(self, experiment_id, to):
+    def transition(self, experiment_id, to, reason=None):
         with self._transaction():
             cur = self._status(experiment_id)
             if _ALLOWED.get(cur) != to:
@@ -178,10 +191,11 @@ class Registry:
                 "UPDATE experiments SET status=? WHERE experiment_id=?",
                 (to, experiment_id))
             self._audit("experiment", experiment_id, "transition",
-                        {"from": cur, "to": to})
+                        {"from": cur, "to": to}, reason=reason)
         return to
 
-    def assign_well(self, experiment_id, plate, well, sample_id):
+    def assign_well(self, experiment_id, plate, well, sample_id,
+                    reason=None):
         with self._transaction():
             self._require_unlocked(experiment_id)
             if not self.db.execute(
@@ -197,10 +211,11 @@ class Registry:
                 "INSERT INTO plates VALUES (?,?,?,?)",
                 (experiment_id, plate, well, sample_id))
             self._audit("plate", f"{experiment_id}:{plate}:{well}",
-                        "assign", {"sample_id": sample_id})
+                        "assign", {"sample_id": sample_id},
+                        reason=reason)
 
     def attach_result(self, experiment_id, name, content: bytes,
-                      meta=None):
+                      meta=None, reason=None):
         """Record a result artifact by content hash. The file itself
         stays wherever it lives. The registry tracks identity."""
         with self._transaction():
@@ -212,7 +227,7 @@ class Registry:
                 (experiment_id, name, sha, json.dumps(meta or {}),
                  time.time()))
             self._audit("result", f"{experiment_id}:{name}", "attach",
-                        {"sha256": sha})
+                        {"sha256": sha}, reason=reason)
             return cur.lastrowid
 
     def plate_map(self, experiment_id, plate):
