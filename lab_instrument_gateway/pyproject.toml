@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lablink"
+version = "0.1.0"
+description = "Lab instrument driver and data-capture pipeline against an emulated SCPI-style device"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2",
+    "fastapi",
+    "uvicorn",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "httpx",
+]
+
+[tool.setuptools.packages.find]
+include = ["lablink*"]
