@@ -1,0 +1,13 @@
+.git
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.snakemake
+analytics/target
+analytics/seeds/*.duckdb
+*.duckdb
+*.db
+labStackDev/results
+.DS_Store

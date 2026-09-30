@@ -1,0 +1,45 @@
+# Compose for the three runnable pieces of lab-informatics.
+#   docker compose up lablink     -> capture API + dashboard on :8000
+#   docker compose up analytics   -> seeds, dbt build, docs on :8080
+#   docker compose up lims-demo   -> one-shot demo run, writes results/
+services:
+
+  lablink:
+    build: .
+    command: python -m lablink.demo
+    environment:
+      # API must bind beyond loopback inside a container; the emulated
+      # SCPI instrument stays on loopback.
+      LABLINK_API_HOST: 0.0.0.0
+      LABLINK_DB: /data/lablink.db
+      # Setpoint writes are gated on this bearer token.
+      LABLINK_API_TOKEN: ${LABLINK_API_TOKEN:?set LABLINK_API_TOKEN}
+    volumes:
+      - lablink-data:/data
+    ports:
+      - "8000:8000"
+
+  lims-demo:
+    build: .
+    working_dir: /app/labStackDev
+    command: python lims/demo_lims.py
+    volumes:
+      # Artifacts land back on the host under labStackDev/results/.
+      - ./labStackDev/results:/app/labStackDev/results
+
+  analytics:
+    build: .
+    working_dir: /app/analytics
+    command: >
+      sh -c "python generate_fixtures.py
+             && dbt seed --profiles-dir .
+             && dbt build --profiles-dir .
+             && dbt docs generate --profiles-dir .
+             && python -m http.server 8080 --directory target"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - lablink
+
+volumes:
+  lablink-data:

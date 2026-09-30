@@ -36,6 +36,30 @@ cd labStackDev && python -m pytest -q tests/
 cd lab_instrument_gateway && python -m pytest -q tests/
 ```
 
+## Docker
+
+`Dockerfile` builds one image covering all three runnable pieces, and
+`docker-compose.yml` gives each a service:
+
+```bash
+export LABLINK_API_TOKEN=<any-token>   # setpoint writes are bearer-gated
+docker compose up lablink              # capture API + dashboard on :8000
+docker compose up analytics            # seeds -> dbt build -> docs on :8080
+docker compose up lims-demo            # one-shot demo, writes labStackDev/results/
+```
+
+The lablink service runs the emulator and capture service in-process, so
+no instrument hardware is needed. `LABLINK_API_HOST=0.0.0.0` is set only
+in the container, while local runs still default to loopback. The analytics
+service regenerates its seed CSVs inside the container by driving the
+same Registry and CaptureService code paths, then builds the dbt project
+and serves the docs site from `target/` on port 8080.
+
+The lablink container's API binding was verified end-to-end locally (env
+overrides launch the emulator, capture service, and API together). The image
+itself is authored for `python:3.11-slim` but has not been built here
+because Docker is not installed on this machine.
+
 Each subdirectory retains its own `AGENTS.md` with project-specific rules
 (synthetic fixtures only, no validated-LIMS/GMP claims), which still apply.
 
