@@ -1,6 +1,7 @@
-# Compose for the three runnable pieces of lab-informatics.
+# Compose for the runnable pieces of lab-informatics.
 #   docker compose up lablink     -> capture API + dashboard on :8000
 #   docker compose up analytics   -> seeds, dbt build, docs on :8080
+#   docker compose up review-ui   -> trajectory review surface on :8081
 #   docker compose up lims-demo   -> one-shot demo run, writes results/
 #   docker compose run verify     -> all three test suites in the image
 services:
@@ -39,6 +40,18 @@ services:
              && python -m http.server 8080 --directory target"
     ports:
       - "8080:8080"
+    depends_on:
+      - lablink
+
+  # Review surface: the traj_review_ui static build from trust-tools,
+  # vendored under review_ui/ (see README for the refresh command).
+  # nginx-alpine is the only service not built from the repo Dockerfile.
+  review-ui:
+    image: nginx:alpine
+    volumes:
+      - ./review_ui:/usr/share/nginx/html:ro
+    ports:
+      - "8081:80"
     depends_on:
       - lablink
 

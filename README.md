@@ -45,6 +45,7 @@ cd lab_instrument_gateway && python -m pytest -q tests/
 export LABLINK_API_TOKEN=<any-token>   # setpoint writes are bearer-gated
 docker compose up lablink              # capture API + dashboard on :8000
 docker compose up analytics            # seeds -> dbt build -> docs on :8080
+docker compose up review-ui            # trajectory review surface on :8081
 docker compose up lims-demo            # one-shot demo, writes labStackDev/results/
 docker compose run verify              # all three test suites inside the image
 ```
@@ -55,6 +56,17 @@ in the container, while local runs still default to loopback. The analytics
 service regenerates its seed CSVs inside the container by driving the
 same Registry and CaptureService code paths, then builds the dbt project
 and serves the docs site from `target/` on port 8080.
+
+The `review-ui` service serves the `traj_review_ui` static build from
+trust-tools, vendored as a snapshot under `review_ui/` so this repo stays
+self-contained. It renders the trajectory-audit sample artifacts bundled
+into that build. Wiring live lablink/policy capture into the surface is
+a known gap, not implied. Refresh the snapshot with:
+
+```bash
+cd ../trust-tools/traj_review_ui && npm run build \
+  && cp -r dist/. ../../lab-informatics/review_ui/
+```
 
 The lablink container's API binding was verified end-to-end locally (env
 overrides launch the emulator, capture service, and API together). The image
