@@ -1,0 +1,69 @@
+{
+  "defaults": {"action": "allow"},
+  "rules": [
+    {
+      "id": "temp-hard",
+      "channel": "TEMP",
+      "above": 42.0,
+      "action": "block",
+      "severity": "high",
+      "reason": "temperature above 42C is outside the culture envelope"
+    },
+    {
+      "id": "temp-freeze",
+      "channel": "TEMP",
+      "below": 2.0,
+      "action": "block",
+      "severity": "high",
+      "reason": "temperature below 2C is outside the culture envelope"
+    },
+    {
+      "id": "temp-soft",
+      "channel": "TEMP",
+      "above": 38.0,
+      "action": "flag",
+      "severity": "medium",
+      "reason": "temperature above 38C is unusual for mammalian culture"
+    },
+    {
+      "id": "ph-band",
+      "channel": "PH",
+      "below": 6.0,
+      "action": "block",
+      "severity": "high",
+      "reason": "pH below 6.0 is outside the culture envelope"
+    },
+    {
+      "id": "ph-band-high",
+      "channel": "PH",
+      "above": 8.0,
+      "action": "block",
+      "severity": "high",
+      "reason": "pH above 8.0 is outside the culture envelope"
+    },
+    {
+      "id": "do-floor",
+      "channel": "DO",
+      "below": 20.0,
+      "action": "flag",
+      "severity": "medium",
+      "reason": "dissolved oxygen below 20% warrants review"
+    },
+    {
+      "id": "agit-hard",
+      "channel": "AGIT",
+      "above": 1200.0,
+      "action": "block",
+      "severity": "high",
+      "reason": "agitation above 1200 rpm risks mechanical damage"
+    },
+    {
+      "id": "agit-soft",
+      "channel": "AGIT",
+      "above": 800.0,
+      "action": "flag",
+      "severity": "medium",
+      "reason": "agitation above 800 rpm is outside routine range"
+    }
+  ]
+}

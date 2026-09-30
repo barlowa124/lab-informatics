@@ -46,6 +46,18 @@ Requests carrying an `Origin` header that does not match the server's host are
 rejected, and without a token configured `create_app` refuses writes unless it
 is built with `allow_insecure_writes=True`, which is only safe on loopback.
 
+Auth decides who may write. The policy gate decides what may be written.
+Every setpoint write is evaluated against a vendored policy engine in the
+`agent_monitor` pattern (`lablink/policy.py`, rules in
+`lablink/policy_default.json`). The verdict is appended to a hash-chained
+JSONL decisions log (`<db>.policy.jsonl`) for every write, allowed or not.
+Blocks never reach the instrument and return HTTP 403. Flags write but
+mark the verdict. The log is inspectable at `/api/policy/decisions`.
+`LABLINK_POLICY` and `LABLINK_POLICY_LOG` override the policy file and
+log path. `examples/policy_decisions.jsonl` is a real three-write log
+recorded against the simulator: one allow, one flag (agit-soft), one
+block (temp-hard).
+
 Inject a fault while it runs:
 
 ```bash
@@ -81,10 +93,11 @@ pip install -e .[dev]
 python -m pytest tests/
 ```
 
-27 tests cover protocol round-trips, setpoint validation, measurement drift, link-drop
+35 tests cover protocol round-trips, setpoint validation, measurement drift, link-drop
 reconnect, negative-value parsing, concurrent transaction safety, error-register reads
 (including the no-retry-on-lost-reply rule), non-finite rejection, setpoint
-authentication and origin checks, error-row persistence, alarm firing, shutdown
+authentication and origin checks, policy-gate allow/flag/block paths with
+decision-log chain verification, error-row persistence, alarm firing, shutdown
 ordering, and the API surface.
 
 ## honest scope

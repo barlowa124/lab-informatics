@@ -1,6 +1,7 @@
 """FastAPI surface over the capture service plus a minimal live dashboard."""
 from __future__ import annotations
 
+import json
 import math
 import os
 import secrets
@@ -14,29 +15,42 @@ from fastapi.responses import FileResponse
 
 from .capture import CaptureService
 from .driver import InstrumentClient, InstrumentError, TransportError
+from .policy import (DEFAULT_POLICY, PolicyLog, check_log, evaluate,
+                     load_policy)
 from .protocol import CHANNELS
 
 DASHBOARD = Path(__file__).resolve().parent.parent / "dashboard" / "index.html"
 
 API_TOKEN_ENV = "LABLINK_API_TOKEN"
 ALLOWED_ORIGINS_ENV = "LABLINK_ALLOWED_ORIGINS"
+POLICY_ENV = "LABLINK_POLICY"
+POLICY_LOG_ENV = "LABLINK_POLICY_LOG"
 
 
 def create_app(client: InstrumentClient, db_path: str, api_token: str | None = None,
-               allow_insecure_writes: bool = False) -> FastAPI:
+               allow_insecure_writes: bool = False,
+               policy=None, policy_log: str | None = None) -> FastAPI:
     """Build the API app.
 
-    Setpoint writes reach the instrument, so they are gated. With an
-    ``api_token`` (or ``LABLINK_API_TOKEN``) callers must send a bearer token
-    in the Authorization header. Without a token, writes are refused
-    unless ``allow_insecure_writes=True``, which is only safe on a loopback
-    bind. Requests carrying a foreign ``Origin`` header are always rejected.
+    Setpoint writes reach the instrument, so they are gated twice. The
+    auth check (bearer token via ``api_token``/``LABLINK_API_TOKEN``, or
+    refused unless ``allow_insecure_writes=True`` on loopback) decides
+    who may write; the policy gate then decides what may be written —
+    every write is evaluated against the policy and the verdict appended
+    to a hash-chained decisions log (allow, flag, and block verdicts are
+    all recorded). Requests carrying a foreign ``Origin`` header are
+    always rejected.
     """
     token = api_token if api_token is not None else os.environ.get(API_TOKEN_ENV)
     allowed_origins = {
         o.strip() for o in os.environ.get(ALLOWED_ORIGINS_ENV, "").split(",") if o.strip()
     }
     svc = CaptureService(client, db_path)
+
+    pol_src = policy or os.environ.get(POLICY_ENV) or DEFAULT_POLICY
+    gate = load_policy(pol_src)
+    gate_log = PolicyLog(policy_log or os.environ.get(POLICY_LOG_ENV)
+                         or f"{db_path}.policy.jsonl")
 
     @asynccontextmanager
     async def lifespan(app):
@@ -113,12 +127,34 @@ def create_app(client: InstrumentClient, db_path: str, api_token: str | None = N
             raise HTTPException(404, f"unknown channel {channel}")
         if not math.isfinite(value):
             raise HTTPException(422, "setpoint must be finite")
+        verdict = evaluate(gate, channel, value)
+        decision = gate_log.record(
+            verdict, channel, value,
+            origin=request.client.host if request.client else None)
+        if verdict.action == "block":
+            raise HTTPException(
+                403, {"detail": f"policy block: {verdict.reason}",
+                      "decision": decision})
         try:
             client.set_setpoint(channel, value)
         except InstrumentError as e:
             raise HTTPException(400, str(e)) from e
         except TransportError as e:
             raise HTTPException(502, str(e)) from e
-        return {"ok": True, "channel": channel, "setpoint": value}
+        return {"ok": True, "channel": channel, "setpoint": value,
+                "policy": {"action": verdict.action,
+                           "rule": verdict.rule,
+                           "decision_id": decision["decision_id"]}}
+
+    @app.get("/api/policy/decisions")
+    def policy_decisions(limit: int = 50):
+        if not 1 <= limit <= 500:
+            raise HTTPException(422, "limit must be 1-500")
+        lines = []
+        if gate_log.path.exists():
+            lines = gate_log.path.read_text().strip().splitlines()
+        return {"decisions": [json.loads(l) for l in lines[-limit:]],
+                "chain_problems": check_log(str(gate_log.path))
+                if lines else []}
 
     return app
