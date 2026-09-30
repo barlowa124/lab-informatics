@@ -46,6 +46,7 @@ export LABLINK_API_TOKEN=<any-token>   # setpoint writes are bearer-gated
 docker compose up lablink              # capture API + dashboard on :8000
 docker compose up analytics            # seeds -> dbt build -> docs on :8080
 docker compose up lims-demo            # one-shot demo, writes labStackDev/results/
+docker compose run verify              # all three test suites inside the image
 ```
 
 The lablink service runs the emulator and capture service in-process, so

@@ -2,6 +2,7 @@
 #   docker compose up lablink     -> capture API + dashboard on :8000
 #   docker compose up analytics   -> seeds, dbt build, docs on :8080
 #   docker compose up lims-demo   -> one-shot demo run, writes results/
+#   docker compose run verify     -> all three test suites in the image
 services:
 
   lablink:
@@ -40,6 +41,16 @@ services:
       - "8080:8080"
     depends_on:
       - lablink
+
+  # Runs every package's tests inside the image — the Dockerfile doubles
+  # as the reproducible test environment. Exits non-zero on failure.
+  verify:
+    build: .
+    command: >
+      sh -c "cd labStackDev && python -m pytest -q tests/
+             && cd ../lab_instrument_gateway && python -m pytest -q tests/
+             && cd ../analytics && python generate_fixtures.py
+             && dbt build --profiles-dir ."
 
 volumes:
   lablink-data:
