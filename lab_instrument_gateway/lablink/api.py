@@ -16,7 +16,7 @@ from fastapi.responses import FileResponse
 from .capture import CaptureService
 from .driver import InstrumentClient, InstrumentError, TransportError
 from .policy import (DEFAULT_POLICY, PolicyLog, check_log, evaluate,
-                     load_policy)
+                     load_policy, policy_sha256)
 from .protocol import CHANNELS
 
 DASHBOARD = Path(__file__).resolve().parent.parent / "dashboard" / "index.html"
@@ -49,6 +49,7 @@ def create_app(client: InstrumentClient, db_path: str, api_token: str | None = N
 
     pol_src = policy or os.environ.get(POLICY_ENV) or DEFAULT_POLICY
     gate = load_policy(pol_src)
+    gate_sha = policy_sha256(gate)
     gate_log = PolicyLog(policy_log or os.environ.get(POLICY_LOG_ENV)
                          or f"{db_path}.policy.jsonl")
 
@@ -130,7 +131,8 @@ def create_app(client: InstrumentClient, db_path: str, api_token: str | None = N
         verdict = evaluate(gate, channel, value)
         decision = gate_log.record(
             verdict, channel, value,
-            origin=request.client.host if request.client else None)
+            origin=request.client.host if request.client else None,
+            policy_sha=gate_sha)
         if verdict.action == "block":
             raise HTTPException(
                 403, {"detail": f"policy block: {verdict.reason}",
@@ -153,7 +155,9 @@ def create_app(client: InstrumentClient, db_path: str, api_token: str | None = N
         lines = []
         if gate_log.path.exists():
             lines = gate_log.path.read_text().strip().splitlines()
-        return {"decisions": [json.loads(l) for l in lines[-limit:]],
+        return {"policy_sha256": gate_sha,
+                "n_rules": len(gate.get("rules", [])),
+                "decisions": [json.loads(l) for l in lines[-limit:]],
                 "chain_problems": check_log(str(gate_log.path))
                 if lines else []}
 

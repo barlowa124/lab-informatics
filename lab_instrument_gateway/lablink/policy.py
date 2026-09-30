@@ -57,6 +57,12 @@ def load_policy(path_or_dict) -> dict:
     return pol
 
 
+def policy_sha256(pol: dict) -> str:
+    """Content hash of the policy a decision was made under — a verdict
+    without its policy version is not an auditable record."""
+    return hashlib.sha256(_canon(pol)).hexdigest()
+
+
 def evaluate(pol: dict, channel: str, value: float) -> Verdict:
     """First matching block wins; else first flag; else allow."""
     flagged: Verdict | None = None
@@ -92,7 +98,8 @@ class PolicyLog:
                                     )["decision_id"]
 
     def record(self, verdict: Verdict, channel: str, value: float,
-               origin: str | None = None) -> dict:
+               origin: str | None = None,
+               policy_sha: str | None = None) -> dict:
         body = {
             "v": SCHEMA_VERSION,
             "kind": "policy_decision",
@@ -105,6 +112,7 @@ class PolicyLog:
             "severity": verdict.severity,
             "reason": verdict.reason,
             "origin": origin,
+            "policy_sha256": policy_sha,
             "chain_prev": self._prev,
         }
         did = "dec-" + hashlib.sha256(_canon(body)).hexdigest()[:16]

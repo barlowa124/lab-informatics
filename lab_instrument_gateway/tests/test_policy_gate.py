@@ -123,6 +123,23 @@ def test_decisions_endpoint_exposes_log(device):
         assert body["chain_problems"] == []
 
 
+def test_decisions_pin_the_policy_that_made_them(device):
+    from lablink.policy import policy_sha256
+    client, srv, db, log = device
+    with TestClient(_app(client, db, log)) as tc:
+        tc.post("/api/setpoint/TEMP", params={"value": 36.5},
+                headers=AUTH)
+        r = tc.get("/api/policy/decisions")
+        body = r.json()
+        assert body["policy_sha256"] == policy_sha256(load_policy(POL))
+        d = body["decisions"][0]
+        assert d["policy_sha256"] == body["policy_sha256"]
+    # a different policy produces a different sha — the pin is contentful
+    pol2 = dict(POL, rules=POL["rules"][:1])
+    assert policy_sha256(load_policy(pol2)) != policy_sha256(
+        load_policy(POL))
+
+
 def test_log_tamper_detected(device):
     client, srv, db, log = device
     with TestClient(_app(client, db, log)) as tc:

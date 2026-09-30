@@ -54,9 +54,11 @@ JSONL decisions log (`<db>.policy.jsonl`) for every write, allowed or not.
 Blocks never reach the instrument and return HTTP 403. Flags write but
 mark the verdict. The log is inspectable at `/api/policy/decisions`.
 `LABLINK_POLICY` and `LABLINK_POLICY_LOG` override the policy file and
-log path. `examples/policy_decisions.jsonl` is a real three-write log
-recorded against the simulator: one allow, one flag (agit-soft), one
-block (temp-hard).
+log path. Each decision pins `policy_sha256`, the content hash of the
+policy that produced it — a verdict is only auditable against the rules
+version that made it. `examples/policy_decisions.jsonl` is a real
+three-write log recorded against the simulator: one allow, one flag
+(agit-soft), one block (temp-hard).
 
 Inject a fault while it runs:
 
