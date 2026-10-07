@@ -8,6 +8,16 @@ repository, each a self-contained package with its own tests and commit
 history (imported via subtree merge).
 
 
+## 60-second demo
+
+```bash
+cd lab_instrument_gateway && pip install -e .
+python -m lablink.demo    # emulator on :5025, API + live dashboard on :8000
+```
+
+![dashboard over the emulated bioreactor: live channels, temperature history, alarm log](lab_instrument_gateway/docs/dashboard.png)
+
+
 ## Where this sits in the portfolio
 
 `lab-informatics` is the **lab data plumbing and integrity** repo: a LIMS-style registry with hash-chained audit trails, HMAC signatures, and reason-for-change (`labStackDev`), plus instrument capture (`lablink`). Sibling repos:
