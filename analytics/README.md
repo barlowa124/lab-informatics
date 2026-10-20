@@ -84,9 +84,9 @@ DBT_PROFILES_DIR=. dbt build
 suite in one pass. `lab_lims.duckdb` is gitignored. Regenerate seeds with
 `python analytics/generate_fixtures.py` from the repo root.
 
-Generated docs (lineage graph, column-level tests) publish to GitHub
-Pages on pushes that touch `analytics/`. See `.github/workflows/docs.yml`
-and https://barlowa124.github.io/lab-informatics/.
+Generated docs (lineage graph, column-level tests) are built locally with
+`dbt docs generate` and served on `:8080` by the root `docker-compose.yml`
+stack.
 
 ## Porting notes
 
